@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ObjectTracking", "ObjectTracking\ObjectTracking.vcxproj", "{D433AE80-4CE4-47CC-8D4C-0CFC47E0E111}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D433AE80-4CE4-47CC-8D4C-0CFC47E0E111}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D433AE80-4CE4-47CC-8D4C-0CFC47E0E111}.Debug|Win32.Build.0 = Debug|Win32
+		{D433AE80-4CE4-47CC-8D4C-0CFC47E0E111}.Release|Win32.ActiveCfg = Release|Win32
+		{D433AE80-4CE4-47CC-8D4C-0CFC47E0E111}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
