@@ -3,15 +3,16 @@
 Tracker::Tracker(std::string videoFile, std::string imageFile , int hessian)
 	: minHessian(hessian)
 {
+	detector = cv::SurfFeatureDetector(minHessian);
 	capture.open(videoFile);
 	cv::namedWindow("Video");
-	cv::Mat image = cv::imread(imageFile);
+	image = cv::imread(imageFile);
 	cv::namedWindow("Image");
-	cv::imshow("Image", image);
 }
 
 void Tracker::track()
 {
+	calculateKeypointsImage();
 	time_t start, end;
 	double fps;
 	int counter = 0;
@@ -27,8 +28,8 @@ void Tracker::track()
 		}
 
 		// detect keypoints
-		cv::SurfFeatureDetector detector(minHessian);
 		detector.detect(frame, keypoints);
+		//cv::drawKeypoints(frame, keypoints, frame);
 
 		// show next frame
 		cv::imshow("Video", frame);
@@ -46,4 +47,13 @@ void Tracker::track()
 			break;
 		}
 	}
+}
+
+void Tracker::calculateKeypointsImage()
+{
+	detector.detect(image, keypointsimage);
+
+	// one time operation, unnecessary
+	//cv::drawKeypoints(image, keypointsimage, image);
+	cv::imshow("Image", image);
 }

@@ -14,9 +14,9 @@ int main()
 {
 	// set number of threads during parallel computation
 	// doesnt work with TrackerGpu
-	/*cv::setNumThreads(1);
-	Tracker tracker("Wildlife.wmv", "chocs-front.jpg", 600);
-	tracker.track();*/
+	//cv::setNumThreads(1);
+	//Tracker tracker("Wildlife.wmv", "chocs-front.jpg", 600);
+	//tracker.track();
 
 	TrackerGpu tracker("Wildlife.wmv", "chocs-front.jpg", 600);
 	tracker.track();

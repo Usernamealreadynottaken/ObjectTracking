@@ -16,10 +16,14 @@ private:
 	// the higher the hessian, the fewer points will surf detect
 	int minHessian;
 	cv::VideoCapture capture;
+	cv::Mat image;
 	cv::Mat frame;
 	std::vector<cv::KeyPoint> keypoints;
+	std::vector<cv::KeyPoint> keypointsimage;
+	cv::SurfFeatureDetector detector;
 public:
 	Tracker(std::string videoFile, std::string imageFile , int hessian);
 	~Tracker() { capture.release(); };
 	void track();
+	void calculateKeypointsImage();
 };
