@@ -18,7 +18,7 @@ int main()
 	//Tracker tracker("Wildlife.wmv", "chocs-front.jpg", 600);
 	//tracker.track();
 
-	TrackerGpu tracker("Wildlife.wmv", "chocs-front.jpg", 600);
+	TrackerGpu tracker("chocs-test.avi", "chocs-front.jpg", 600);
 	tracker.track();
 	
 	std::cin.get();
