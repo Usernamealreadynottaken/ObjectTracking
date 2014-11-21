@@ -1,14 +1,23 @@
 #include "trackergpu.h"
 
 
-TrackerGpu::TrackerGpu(std::string videoFile, std::string imageFile , int hessian)
+TrackerGpu::TrackerGpu(std::string videoFile, int hessian, std::vector<std::string> imagefiles)
 	: minHessian(hessian)
 {
+	detector = cv::gpu::SURF_GPU(minHessian);
 	capture.open(videoFile);
 	cv::namedWindow("Video");
-	image = cv::imread(imageFile);
-	cv::namedWindow("Image");
+	for (size_t i = 0; i < imagefiles.size(); ++i)
+	{
+		images.push_back(cv::Mat());
+		greyframes.push_back(cv::Mat());
+		gpuimages.push_back(cv::gpu::GpuMat());
+		images[i] = cv::imread(imagefiles[i]);
+		//cv::namedWindow("Image" + std::to_string(i));
+	}
 	bfmatcher = cv::gpu::BruteForceMatcher_GPU_base();
+	color = cv::Scalar(0, 255, 0);
+	width = 4;
 }
 
 void TrackerGpu::track()
@@ -39,9 +48,7 @@ void TrackerGpu::track()
 		bfmatcher.match(gpudescriptors, gpudescriptorsimage, matches);
 
 		detector.downloadKeypoints(gpukeypoints, keypoints);
-		detector.downloadDescriptors(gpudescriptors, descriptors);
-		detector.downloadKeypoints(gpukeypointsimage, keypointsimage);
-		detector.downloadDescriptors(gpudescriptorsimage, descriptorsimage);
+		//detector.downloadDescriptors(gpudescriptors, descriptors);
 		
 		//cv::drawMatches(cv::Mat(frame), keypoints, cv::Mat(image), keypointsimage, matches, img_matches);
 
@@ -65,24 +72,40 @@ void TrackerGpu::track()
 		//	}
 		//}
 
-		////-- Localize the object
-		//std::vector<cv::Point2f> obj;
-		//std::vector<cv::Point2f> scene;
+		//-- Localize the object
+		std::vector<cv::Point2f> obj;
+		std::vector<cv::Point2f> scene;
 
-		//for( int i = 0; i < good_matches.size(); i++ )
-		//{
-		//	//-- Get the keypoints from the good matches
-		//	obj.push_back( keypoints[ good_matches[i].queryIdx ].pt );
-		//	scene.push_back( keypointsimage[ good_matches[i].trainIdx ].pt );
-		//}
-		//
+		for(size_t i = 0; i < matches.size(); i++)
+		{
+			//-- Get the keypoints from the good matches
+			obj.push_back( keypointsimage[ matches[i].trainIdx ].pt );
+			scene.push_back( keypoints[ matches[i].queryIdx ].pt );
+		}
+		
 		//if (obj.size() > 4)
 		//{
-		//	homography = cv::findHomography( cv::Mat(obj), cv::Mat(scene) );
+		//	homography = cv::findHomography( cv::Mat(obj), cv::Mat(scene), CV_RANSAC, 10);
+		//	//-- Get the corners from the image_1 ( the object to be "detected" )
+		//	std::vector<cv::Point2f> obj_corners(4);
+		//	obj_corners[0] = cvPoint(0,0);
+		//	obj_corners[1] = cvPoint( image.cols, 0 );
+		//	obj_corners[2] = cvPoint( image.cols, image.rows );
+		//	obj_corners[3] = cvPoint( 0, image.rows );
+		//	std::vector<cv::Point2f> scene_corners(4);
+
+		//	cv::perspectiveTransform(obj_corners, scene_corners, homography);
+
+		//	//-- Draw lines between the corners (the mapped object in the scene - image_2 )
+		//	line( frame, scene_corners[0], scene_corners[1], color, width );
+		//	line( frame, scene_corners[1], scene_corners[2], color, width );
+		//	line( frame, scene_corners[2], scene_corners[3], color, width );
+		//	line( frame, scene_corners[3], scene_corners[0], color, width );
 		//}
 
 		// drawing dramatically decreases performance 
 		//cv::drawKeypoints(frame, keypoints, frame);
+		//cv::drawMatches(frame, keypoints, image, keypointsimage, matches, img_matches);
 
 		// show next frame
 		cv::imshow("Video", frame);
@@ -104,11 +127,19 @@ void TrackerGpu::track()
 
 void TrackerGpu::calculateKeypointsImage()
 {
-	cv::cvtColor(image, greyFrame, CV_BGR2GRAY);
-	gpuframe.upload(greyFrame);
+	for (size_t i = 0; i < images.size(); ++i)
+	{
+		cv::cvtColor(images[i], greyframes[i], CV_BGR2GRAY);
+		gpuimages[i].upload(greyframes[i]);
+	}
 	detector(gpuframe, cv::gpu::GpuMat(), gpukeypointsimage, gpudescriptorsimage);
+	detector.downloadKeypoints(gpukeypointsimage, keypointsimage);
+	detector.downloadDescriptors(gpudescriptorsimage, descriptorsimage);
 
 	// one time operation, unnecessary
 	//cv::drawKeypoints(image, keypointsimage, image);
-	cv::imshow("Image", image);
+	/*for (size_t i = 0; i < images.size(); ++i)
+	{
+		cv::imshow("Image" + std::to_string(i), images[i]);
+	}*/
 }

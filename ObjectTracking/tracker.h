@@ -22,7 +22,7 @@ private:
 	std::vector<cv::KeyPoint> keypointsimage;
 	cv::SurfFeatureDetector detector;
 public:
-	Tracker(std::string videoFile, std::string imageFile , int hessian);
+	Tracker(std::string videoFile, int hessian, std::string imageFile);
 	~Tracker() { capture.release(); };
 	void track();
 	void calculateKeypointsImage();

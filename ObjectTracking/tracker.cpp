@@ -1,6 +1,6 @@
 #include "tracker.h"
 
-Tracker::Tracker(std::string videoFile, std::string imageFile , int hessian)
+Tracker::Tracker(std::string videoFile, int hessian, std::string imageFile)
 	: minHessian(hessian)
 {
 	detector = cv::SurfFeatureDetector(minHessian);
@@ -21,6 +21,7 @@ void Tracker::track()
 	while (capture.isOpened())
 	{
 		bool success = capture.read(frame);
+		//cv::cvtColor(frame, frame, CV_BGR2GRAY);
 
 		if (!success)
 		{
