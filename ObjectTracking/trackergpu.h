@@ -11,6 +11,7 @@
 #include <iostream>
 #include <vector>
 #include <ctime>
+#include "CUDA_RANSAC_Homography.h"
 
 class TrackerGpu
 {
@@ -23,20 +24,31 @@ private:
 	std::vector<cv::Mat> greyframes;
 	cv::Mat greyFrame;
 	std::vector<cv::KeyPoint> keypoints;
-	std::vector<cv::KeyPoint> keypointsimage;
-	std::vector<float> descriptorsimage;
+	std::vector< std::vector<cv::KeyPoint> > keypointsimage;
+	std::vector< std::vector<float> > descriptorsimage;
 	std::vector<float> descriptors;
 	cv::gpu::SURF_GPU detector;
 	cv::gpu::GpuMat gpuframe;
 	std::vector<cv::gpu::GpuMat> gpuimages;
 	cv::gpu::GpuMat gpukeypoints;
-	cv::gpu::GpuMat gpukeypointsimage;
+	std::vector< cv::gpu::GpuMat > gpukeypointsimage;
 	cv::gpu::GpuMat gpudescriptors;
-	cv::gpu::GpuMat gpudescriptorsimage;
-	cv::gpu::BruteForceMatcher_GPU_base bfmatcher;
+	std::vector< cv::gpu::GpuMat > gpudescriptorsimage;
+	cv::gpu::BruteForceMatcher_GPU< cv::L2<float> > bfmatcher;
 	cv::Mat homography;
 	cv::Scalar color;
 	int width;
+	double CONFIDENCE;
+	double INLIER_RATIO;
+	double INLIER_THRESHOLD;
+    cv::gpu::GpuMat gpu_ret_idx, gpu_ret_dist, gpu_all_dist;
+	cv::gpu::GpuMat trainIdx, distance;
+    cv::Mat ret_idx, ret_dist;
+	std::vector<float> match_score;
+    std::vector <Point2Df> src, dst;
+	int best_inliers;
+    float best_H[9];
+    std::vector <char> inlier_mask;
 public:
 	TrackerGpu(std::string videoFile , int hessian, std::vector<std::string> imagefiles);
 	~TrackerGpu() { capture.release(); };

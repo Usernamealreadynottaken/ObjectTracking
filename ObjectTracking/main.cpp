@@ -5,6 +5,7 @@
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/nonfree/features2d.hpp>
 #include <opencv2/nonfree/gpu.hpp>
+#include <opencv2/gpu/gpu.hpp>
 #include <iostream>
 #include <vector>
 #include "tracker.h"
@@ -15,10 +16,10 @@ int main()
 	std::vector<std::string> imagefiles;
 	imagefiles.push_back("chocs-front.jpg");
 	imagefiles.push_back("chocs-back.jpg");
-	imagefiles.push_back("chocs-bottom.jpg");
-	imagefiles.push_back("chocs-top.jpg");
-	imagefiles.push_back("chocs-left.jpg");
-	imagefiles.push_back("chocs-right.jpg");
+	//imagefiles.push_back("chocs-bottom.jpg");
+	//imagefiles.push_back("chocs-top.jpg");
+	//imagefiles.push_back("chocs-left.jpg");
+	//imagefiles.push_back("chocs-right.jpg");
 
 	// set number of threads during parallel computation
 	// doesnt work with TrackerGpu

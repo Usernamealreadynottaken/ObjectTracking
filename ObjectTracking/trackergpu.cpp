@@ -5,6 +5,9 @@ TrackerGpu::TrackerGpu(std::string videoFile, int hessian, std::vector<std::stri
 	: minHessian(hessian)
 {
 	detector = cv::gpu::SURF_GPU(minHessian);
+	CONFIDENCE = 0.99;
+	INLIER_RATIO = 0.18;
+	INLIER_THRESHOLD = 3.0;
 	capture.open(videoFile);
 	cv::namedWindow("Video");
 	for (size_t i = 0; i < imagefiles.size(); ++i)
@@ -12,10 +15,15 @@ TrackerGpu::TrackerGpu(std::string videoFile, int hessian, std::vector<std::stri
 		images.push_back(cv::Mat());
 		greyframes.push_back(cv::Mat());
 		gpuimages.push_back(cv::gpu::GpuMat());
+		keypointsimage.push_back(std::vector<cv::KeyPoint>());
+		descriptorsimage.push_back(std::vector<float>());
+		gpukeypointsimage.push_back(cv::gpu::GpuMat());
+		gpudescriptorsimage.push_back(cv::gpu::GpuMat());
+
 		images[i] = cv::imread(imagefiles[i]);
 		//cv::namedWindow("Image" + std::to_string(i));
 	}
-	bfmatcher = cv::gpu::BruteForceMatcher_GPU_base();
+	bfmatcher = cv::gpu::BruteForceMatcher_GPU< cv::L2<float> >();
 	color = cv::Scalar(0, 255, 0);
 	width = 4;
 }
@@ -44,44 +52,67 @@ void TrackerGpu::track()
 
 		// detect keypoints
 		detector(gpuframe, cv::gpu::GpuMat(), gpukeypoints, gpudescriptors);
-		cv::gpu::GpuMat trainIdx, distance;
-		bfmatcher.match(gpudescriptors, gpudescriptorsimage, matches);
+		detector.downloadKeypoints(gpukeypoints, keypoints);
+
+		// match keypoints
+		//bfmatcher.match(gpudescriptors, gpudescriptorsimage[0], matches);
+		bfmatcher.knnMatchSingle(gpudescriptors, gpudescriptorsimage[0], gpu_ret_idx, gpu_ret_dist, gpu_all_dist, 3);
+
+		gpu_ret_idx.download(ret_idx);
+        gpu_ret_dist.download(ret_dist);
+
+		float ratio = 0.7f;
+        float min_val = FLT_MAX;
+        float max_val = 0.0f;
+        for(int i=0; i < ret_idx.rows; i++) {
+            if(ret_dist.at<float>(i,0) < ret_dist.at<float>(i,1)*ratio) {
+                int idx = ret_idx.at<int>(i,0);
+
+                Point2Df a, b;
+                a.x = keypoints[i].pt.x;
+                a.y = keypoints[i].pt.y;
+
+                b.x = keypointsimage[0][idx].pt.x;
+                b.y = keypointsimage[0][idx].pt.y;
+
+                src.push_back(a);
+                dst.push_back(b);
+                match_score.push_back(ret_dist.at<float>(i,0));
+
+                if(ret_dist.at<float>(i,0) < min_val) {
+                    min_val = ret_dist.at<float>(i,0);
+                }
+
+                if(ret_dist.at<float>(i,0) > max_val) {
+                    max_val = ret_dist.at<float>(i,0);
+                }
+            }
+        }
+
+        // Flip score
+        for(unsigned int i=0; i < match_score.size(); i++) {
+            match_score[i] = max_val - match_score[i] + min_val;
+        }
 
 		detector.downloadKeypoints(gpukeypoints, keypoints);
 		//detector.downloadDescriptors(gpudescriptors, descriptors);
 		
 		//cv::drawMatches(cv::Mat(frame), keypoints, cv::Mat(image), keypointsimage, matches, img_matches);
 
-		//double max_dist = 0; double min_dist = 100;
-
-		////-- Quick calculation of max and min distances between keypoints
-		//for( int i = 0; i < gpudescriptors.rows; i++ )
-		//{ 
-		//	double dist = matches[i].distance;
-		//	if( dist < min_dist ) min_dist = dist;
-		//	if( dist > max_dist ) max_dist = dist;
-		//}
-
-		//std::vector< cv::DMatch > good_matches;
-
-		//for( int i = 0; i < gpudescriptors.rows; i++ )
-		//{ 
-		//	if( matches[i].distance < 3*min_dist )
-		//	{ 
-		//		good_matches.push_back( matches[i]); 
-		//	}
-		//}
-
 		//-- Localize the object
-		std::vector<cv::Point2f> obj;
-		std::vector<cv::Point2f> scene;
+		//std::vector<cv::Point2f> obj;
+		//std::vector<cv::Point2f> scene;
 
-		for(size_t i = 0; i < matches.size(); i++)
-		{
-			//-- Get the keypoints from the good matches
-			obj.push_back( keypointsimage[ matches[i].trainIdx ].pt );
-			scene.push_back( keypoints[ matches[i].queryIdx ].pt );
-		}
+		//for(size_t i = 0; i < matches.size(); i++)
+		//{
+		//	//-- Get the keypoints from the good matches
+		//	obj.push_back( keypointsimage[0][ matches[i].trainIdx ].pt );
+		//	scene.push_back( keypoints[ matches[i].queryIdx ].pt );
+		//}
+		
+		int K = (int)(log(1.0 - CONFIDENCE) / log(1.0 - pow(INLIER_RATIO, 4.0)));
+		if (src.size() > 5)
+			CUDA_RANSAC_Homography(src, dst, match_score, INLIER_THRESHOLD, K, &best_inliers, best_H, &inlier_mask);
 		
 		//if (obj.size() > 4)
 		//{
@@ -89,9 +120,9 @@ void TrackerGpu::track()
 		//	//-- Get the corners from the image_1 ( the object to be "detected" )
 		//	std::vector<cv::Point2f> obj_corners(4);
 		//	obj_corners[0] = cvPoint(0,0);
-		//	obj_corners[1] = cvPoint( image.cols, 0 );
-		//	obj_corners[2] = cvPoint( image.cols, image.rows );
-		//	obj_corners[3] = cvPoint( 0, image.rows );
+		//	obj_corners[1] = cvPoint( images.at(0).cols, 0 );
+		//	obj_corners[2] = cvPoint( images.at(0).cols, images.at(0).rows );
+		//	obj_corners[3] = cvPoint( 0, images.at(0).rows );
 		//	std::vector<cv::Point2f> scene_corners(4);
 
 		//	cv::perspectiveTransform(obj_corners, scene_corners, homography);
@@ -116,6 +147,10 @@ void TrackerGpu::track()
 		fps = ++counter / sec;
 		std::cout << fps << '\n';
 
+		src.clear();
+		dst.clear();
+		match_score.clear();
+
 		// break after pressing esc
 		if (cv::waitKey(30) == 27)
 		{
@@ -131,10 +166,10 @@ void TrackerGpu::calculateKeypointsImage()
 	{
 		cv::cvtColor(images[i], greyframes[i], CV_BGR2GRAY);
 		gpuimages[i].upload(greyframes[i]);
+		detector(gpuimages[i], cv::gpu::GpuMat(), gpukeypointsimage[i], gpudescriptorsimage[i]);
+		detector.downloadKeypoints(gpukeypointsimage[i], keypointsimage[i]);
+		detector.downloadDescriptors(gpudescriptorsimage[i], descriptorsimage[i]);
 	}
-	detector(gpuframe, cv::gpu::GpuMat(), gpukeypointsimage, gpudescriptorsimage);
-	detector.downloadKeypoints(gpukeypointsimage, keypointsimage);
-	detector.downloadDescriptors(gpudescriptorsimage, descriptorsimage);
 
 	// one time operation, unnecessary
 	//cv::drawKeypoints(image, keypointsimage, image);
