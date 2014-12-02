@@ -14,12 +14,14 @@
 int main()
 {
 	std::vector<std::string> imagefiles;
-	imagefiles.push_back("chocs-front.jpg");
-	imagefiles.push_back("chocs-back.jpg");
+	//imagefiles.push_back("chocs-front.jpg");
+	//imagefiles.push_back("chocs-back.jpg");
 	//imagefiles.push_back("chocs-bottom.jpg");
 	//imagefiles.push_back("chocs-top.jpg");
 	//imagefiles.push_back("chocs-left.jpg");
 	//imagefiles.push_back("chocs-right.jpg");
+	imagefiles.push_back("nokia_front_240p.jpg");
+	//imagefiles.push_back("nokia_back_240p.jpg");
 
 	// set number of threads during parallel computation
 	// doesnt work with TrackerGpu
@@ -27,7 +29,7 @@ int main()
 	//Tracker tracker("chocs-test.avi", 400, "chocs-front.jpg");
 	//tracker.track();
 
-	TrackerGpu tracker("chocs-test.avi", 400, imagefiles);
+	TrackerGpu tracker("nokia640.mov", 400, imagefiles);
 	tracker.track();
 	
 	std::cin.get();

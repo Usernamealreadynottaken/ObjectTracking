@@ -19,6 +19,7 @@ private:
 	// the higher the hessian, the fewer points will surf detect
 	int minHessian;
 	cv::VideoCapture capture;
+	cv::VideoWriter writer;
 	std::vector<cv::Mat> images;
 	cv::Mat frame;
 	std::vector<cv::Mat> greyframes;
@@ -51,7 +52,10 @@ private:
     std::vector <char> inlier_mask;
 public:
 	TrackerGpu(std::string videoFile , int hessian, std::vector<std::string> imagefiles);
-	~TrackerGpu() { capture.release(); };
+	~TrackerGpu() { 
+		capture.release(); 
+		writer.release();
+	};
 	void track();
 	void calculateKeypointsImage();
 };

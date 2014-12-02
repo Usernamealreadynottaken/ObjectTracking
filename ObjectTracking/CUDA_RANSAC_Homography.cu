@@ -322,6 +322,11 @@ __global__ void RANSAC_Homography(const Point2Df *src, const Point2Df *dst,int p
     ret_inliers[idx] = EvalHomography(src, dst, pts_num, H, inlier_threshold);
 }
 
+void prepare()
+{
+
+}
+
 void CUDA_RANSAC_Homography(const vector <Point2Df> &src, const vector <Point2Df> &dst, const vector <float> &match_score,
                             float inlier_threshold, int iterations,
                             int *best_inliers, float *best_H, vector <char> *inlier_mask)
