@@ -21,7 +21,11 @@ int main()
 	//imagefiles.push_back("chocs-left.jpg");
 	//imagefiles.push_back("chocs-right.jpg");
 	imagefiles.push_back("nokia_front_240p.jpg");
-	//imagefiles.push_back("nokia_back_240p.jpg");
+	/*imagefiles.push_back("nokia_back_240p.jpg");
+	imagefiles.push_back("nokia_bottom_240p.jpg");
+	imagefiles.push_back("nokia_top_240p.jpg");
+	imagefiles.push_back("nokia_left_240p.jpg");
+	imagefiles.push_back("nokia_right_240p.jpg");*/
 
 	// set number of threads during parallel computation
 	// doesnt work with TrackerGpu
