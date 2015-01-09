@@ -20,12 +20,18 @@ int main()
 	//imagefiles.push_back("chocs-top.jpg");
 	//imagefiles.push_back("chocs-left.jpg");
 	//imagefiles.push_back("chocs-right.jpg");
-	imagefiles.push_back("nokia_front_240p.jpg");
+	//imagefiles.push_back("nokia_front_240p.jpg");
 	/*imagefiles.push_back("nokia_back_240p.jpg");
 	imagefiles.push_back("nokia_bottom_240p.jpg");
 	imagefiles.push_back("nokia_top_240p.jpg");
 	imagefiles.push_back("nokia_left_240p.jpg");
 	imagefiles.push_back("nokia_right_240p.jpg");*/
+	imagefiles.push_back("truffle-front.jpg");
+	imagefiles.push_back("truffle-back.jpg");
+	imagefiles.push_back("truffle-bottom.jpg");
+	imagefiles.push_back("truffle-top.jpg");
+	imagefiles.push_back("truffle-left.jpg");
+	imagefiles.push_back("truffle-right.jpg");
 
 	// set number of threads during parallel computation
 	// doesnt work with TrackerGpu
@@ -33,7 +39,7 @@ int main()
 	//Tracker tracker("chocs-test.avi", 400, "chocs-front.jpg");
 	//tracker.track();
 
-	TrackerGpu tracker("nokia640.mov", 400, imagefiles);
+	TrackerGpu tracker("truffle.mp4", 1000, imagefiles);
 	tracker.track();
 	
 	std::cin.get();

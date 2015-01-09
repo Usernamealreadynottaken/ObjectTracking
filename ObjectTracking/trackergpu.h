@@ -39,17 +39,28 @@ private:
 	cv::Mat homography;
 	cv::Scalar color;
 	int width;
-	double CONFIDENCE;
-	double INLIER_RATIO;
-	double INLIER_THRESHOLD;
+	float CONFIDENCE;
+	float INLIER_RATIO;
+	float INLIER_THRESHOLD;
     cv::gpu::GpuMat gpu_ret_idx, gpu_ret_dist, gpu_all_dist;
 	cv::gpu::GpuMat trainIdx, distance;
     cv::Mat ret_idx, ret_dist;
 	std::vector<float> match_score;
     std::vector <Point2Df> src, dst;
+	int inliers;
 	int best_inliers;
     float best_H[9];
     std::vector <char> inlier_mask;
+	std::vector< std::vector<cv::DMatch> > matches;
+	std::vector< std::vector<cv::Point2f> > obj;
+	std::vector< std::vector<cv::Point2f> > scene;
+	cv::Point2f * objptr;
+	cv::Point2f * scnptr;
+	cv::Point2f resultPoint;
+protected:
+	void ransac_opencv();
+	void ransac_gpu();
+	void ransac();
 public:
 	TrackerGpu(std::string videoFile , int hessian, std::vector<std::string> imagefiles);
 	~TrackerGpu() { 
